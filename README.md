@@ -1,4 +1,4 @@
-# Monitoring Kualitas Udara Berbasis IoT
+# Monitoring Kualitas Udara Berbasis App Android
 
 Repository ini berisi kode program Arduino IDE (.ino) yang digunakan untuk memonitor kualitas udara menggunakan sensor gas **MQ135** dan **MQ2**, dengan dukungan koneksi **Firebase** dan notifikasi buzzer. Project ini merupakan bagian dari Tugas Akhir dengan judul:  
 **"Perancangan Sistem Monitoring Kualitas Udara Berbasis App Android dengan MIT App Inventor"**
