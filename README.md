@@ -1,34 +1,85 @@
-
 # Monitoring Kualitas Udara Berbasis IoT
 
-Project ini merupakan bagian dari Tugas Akhir dengan judul:  
-**"Pengembangan Internet of Things (IoT) untuk Monitoring Kualitas Udara dengan Analisis Polutan Berbasis Machine Learning"**
+Repository ini berisi kode program Arduino IDE (.ino) yang digunakan untuk memonitor kualitas udara menggunakan sensor gas **MQ135** dan **MQ2**, dengan dukungan koneksi **Firebase** dan notifikasi buzzer. Project ini merupakan bagian dari Tugas Akhir dengan judul:  
+**"Perancangan Sistem Monitoring Kualitas Udara Berbasis App Android dengan MIT App Inventor"**
 
-## 📦 Deskripsi
-Sistem ini memanfaatkan sensor MQ135 dan MQ2 untuk mendeteksi kualitas udara. Data dikirim melalui ESP32 ke Firebase, dan ditampilkan melalui aplikasi Android menggunakan MIT App Inventor.
+## 📜 Penjelasan Program `klasifikasi2.ino`
 
-## 🔧 Perangkat yang Digunakan
-- ESP32
-- Sensor MQ135 (deteksi gas beracun)
-- Sensor MQ2 (deteksi asap/gas)
-- Buzzer
-- Firebase (Realtime Database)
-- MIT App Inventor (Aplikasi Android)
+### 🔌 Koneksi & Inisialisasi
+- Menggunakan library:
+  - `WiFi.h` untuk koneksi internet.
+  - `FirebaseESP32.h` untuk integrasi ke Firebase.
+- Terhubung ke jaringan WiFi lokal.
+- Mengatur kredensial dan endpoint Firebase Realtime Database.
 
-## 🔌 Cara Upload Program ke ESP32
-1. Buka file `klasifikasi2.ino` di Arduino IDE
-2. Pilih Board: ESP32 Dev Module
-3. Sambungkan ESP32 via USB
-4. Klik Upload
+```cpp
+const char* ssid = "St. Jombor";
+const char* password = "satusampai8";
+#define FIREBASE_HOST "https://ta-monitoring-udara-default-rtdb.firebaseio.com/"
+#define FIREBASE_AUTH "AIzaSyDWKlh40hVdpH6ayvVxzApkSpwAYzel0wM"
+```
 
-## 📊 Fitur Utama
-- Monitoring real-time gas/asap
-- Buzzer aktif saat nilai ambang terlampaui
-- Menyimpan data ke Firebase
-- Menampilkan grafik historis di aplikasi Android
+### 🧪 Pembacaan Sensor
+- **MQ135** → mendeteksi gas berbahaya seperti CO₂, NH₃, dan benzena.
+- **MQ2** → mendeteksi gas seperti LPG, asap, dan hidrogen.
+- Nilai sensor dikalikan `sensitivity` (350) lalu disesuaikan ke skala 0–350.
+
+```cpp
+air_quality_mq135 = val_mq135 * sensitivity / 4096;
+air_quality_mq2 = val_mq2 * sensitivity / 4096;
+```
+
+### 📊 Klasifikasi Kualitas Udara
+Fungsi `klasifikasi()` akan mengembalikan status kualitas udara berdasarkan nilai sensor:
+- `<= 50`: BAIK
+- `<= 100`: SEDANG
+- `<= 200`: TIDAK_SEHAT
+- `<= 300`: SANGAT_TIDAK_SEHAT
+- `> 300`: BERBAHAYA
+
+### ☁️ Pengiriman ke Firebase
+- Nilai sensor dikirim ke Firebase di path:
+  - `/monitoring/mq135`
+  - `/monitoring/mq2`
+  - `/monitoring/status` (hasil klasifikasi terburuk dari dua sensor)
+
+```cpp
+Firebase.setInt(firebaseData, "/monitoring/mq135", air_quality_mq135);
+Firebase.setInt(firebaseData, "/monitoring/status", status_akhir);
+```
+
+### 🚨 Kendali Buzzer
+- Jika status udara lebih buruk dari `SEDANG` (nilai > 100), buzzer akan menyala berkedip 5 kali.
+- Jika udara BAIK/SEDANG, buzzer dimatikan.
+
+```cpp
+if (nilai_terburuk > 100) {
+    // Buzzer ON
+} else {
+    // Buzzer OFF
+}
+```
+
+### 🔁 Loop Utama
+Program terus berjalan setiap 1 detik:
+1. Baca sensor
+2. Kirim data
+3. Evaluasi status
+4. Aktifkan buzzer jika perlu
 
 ---
 
-## 👨‍💻 Author
-Nurmansyah – Teknik Informatika  
-Tugas Akhir 2025
+## ⚙️ Perangkat Keras yang Digunakan
+- **ESP32**
+- **Sensor MQ135**
+- **Sensor MQ2**
+- **Buzzer**
+- Koneksi WiFi
+
+## 📱 Output dan Visualisasi
+- Data realtime tersimpan di Firebase.
+- Dapat ditampilkan dalam bentuk angka dan status di aplikasi Android menggunakan **MIT App Inventor**.
+
+---
+
+📌 File program utama: [`klasifikasi2.ino`](klasifikasi2.ino)
